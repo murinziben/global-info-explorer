@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Info Explorer - Explore Countries Worldwide</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="container">
+            <h1>🌍 Global Info Explorer</h1>
+            <p class="subtitle">Discover information about countries around the world</p>
+        </div>
+    </header>
+
+    <!-- Search and Filter Controls -->
+    <section class="controls">
+        <div class="container">
+            <!-- Search Box -->
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search for a country..."
+                    aria-label="Search countries"
+                >
+                <button id="searchBtn" class="btn btn-primary">Search</button>
+            </div>
+
+            <!-- Filter and Sort Options -->
+            <div class="filter-sort-container">
+                <!-- Region Filter -->
+                <div class="filter-group">
+                    <label for="regionFilter">Filter by Region:</label>
+                    <select id="regionFilter">
+                        <option value="all">All Regions</option>
+                        <option value="Africa">Africa</option>
+                        <option value="Americas">Americas</option>
+                        <option value="Asia">Asia</option>
+                        <option value="Europe">Europe</option>
+                        <option value="Oceania">Oceania</option>
+                    </select>
+                </div>
+
+                <!-- Sort Options -->
+                <div class="filter-group">
+                    <label for="sortSelect">Sort by:</label>
+                    <select id="sortSelect">
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                        <option value="population-desc">Population (High to Low)</option>
+                        <option value="population-asc">Population (Low to High)</option>
+                        <option value="area-desc">Area (Largest First)</option>
+                        <option value="area-asc">Area (Smallest First)</option>
+                    </select>
+                </div>
+
+                <!-- Reset Button -->
+                <button id="resetBtn" class="btn btn-secondary">Reset All</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Loading countries data...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorMessage" class="error-message hidden">
+        <p id="errorText"></p>
+        <button id="retryBtn" class="btn btn-primary">Retry</button>
+    </div>
+
+    <!-- Results Count -->
+    <div class="container">
+        <p id="resultsCount" class="results-count"></p>
+    </div>
+
+    <!-- Countries Grid -->
+    <main class="container">
+        <div id="countriesGrid" class="countries-grid">
+            <!-- Countries will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <!-- Country Detail Modal -->
+    <div id="countryModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div id="countryDetails">
+                <!-- Country details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>Data provided by <a href="https://restcountries.com" target="_blank">REST Countries API</a></p>
+            <p>Created for educational purposes | &copy; 2025</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

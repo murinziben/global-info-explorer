@@ -3,19 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Info Explorer - Explore Countries Worldwide</title>
+    <title>Global Info Explorer - Ultimate Country Information Platform</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Header Section -->
     <header class="header">
         <div class="container">
-            <h1>🌍 Global Info Explorer</h1>
-            <p class="subtitle">Discover information about countries around the world</p>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>🌍 Global Info Explorer</h1>
+                    <p class="subtitle">Ultimate platform for exploring world countries</p>
+                    <p class="data-note">📊 Demographics • Geography • Economy • Culture • Statistics</p>
+                </div>
+                <div class="header-right">
+                    <button id="darkModeToggle" class="btn btn-icon" title="Toggle Dark Mode">🌙</button>
+                    <button id="compareBtn" class="btn btn-secondary" title="Compare Countries">
+                        <span id="compareCount">Compare (0)</span>
+                    </button>
+                    <button id="favoritesBtn" class="btn btn-secondary" title="View Favorites">
+                        ⭐ Favorites (<span id="favCount">0</span>)
+                    </button>
+                    <button id="statsBtn" class="btn btn-secondary">📊 Statistics</button>
+                    <button id="quizBtn" class="btn btn-secondary">🎯 Quiz Mode</button>
+                </div>
+            </div>
         </div>
     </header>
 
-    <!-- Search and Filter Controls -->
+    <!-- Advanced Controls Section -->
     <section class="controls">
         <div class="container">
             <!-- Search Box -->
@@ -23,17 +39,17 @@
                 <input 
                     type="text" 
                     id="searchInput" 
-                    placeholder="Search for a country..."
+                    placeholder="Search for a country by name, capital, or language..."
                     aria-label="Search countries"
                 >
-                <button id="searchBtn" class="btn btn-primary">Search</button>
+                <button id="searchBtn" class="btn btn-primary">🔍 Search</button>
+                <button id="advancedFiltersToggle" class="btn btn-secondary">⚙️ Advanced Filters</button>
             </div>
 
-            <!-- Filter and Sort Options -->
+            <!-- Basic Filters -->
             <div class="filter-sort-container">
-                <!-- Region Filter -->
                 <div class="filter-group">
-                    <label for="regionFilter">Filter by Region:</label>
+                    <label for="regionFilter">Region:</label>
                     <select id="regionFilter">
                         <option value="all">All Regions</option>
                         <option value="Africa">Africa</option>
@@ -41,10 +57,10 @@
                         <option value="Asia">Asia</option>
                         <option value="Europe">Europe</option>
                         <option value="Oceania">Oceania</option>
+                        <option value="Antarctic">Antarctic</option>
                     </select>
                 </div>
 
-                <!-- Sort Options -->
                 <div class="filter-group">
                     <label for="sortSelect">Sort by:</label>
                     <select id="sortSelect">
@@ -57,8 +73,62 @@
                     </select>
                 </div>
 
-                <!-- Reset Button -->
-                <button id="resetBtn" class="btn btn-secondary">Reset All</button>
+                <button id="resetBtn" class="btn btn-secondary">🔄 Reset All</button>
+            </div>
+
+            <!-- Advanced Filters Panel (Hidden by default) -->
+            <div id="advancedFilters" class="advanced-filters hidden">
+                <h3>🔧 Advanced Filters</h3>
+                <div class="advanced-filters-grid">
+                    <div class="filter-group">
+                        <label for="populationMin">Min Population:</label>
+                        <input type="number" id="populationMin" placeholder="e.g., 1000000">
+                    </div>
+                    <div class="filter-group">
+                        <label for="populationMax">Max Population:</label>
+                        <input type="number" id="populationMax" placeholder="e.g., 100000000">
+                    </div>
+                    <div class="filter-group">
+                        <label for="areaMin">Min Area (km²):</label>
+                        <input type="number" id="areaMin" placeholder="e.g., 1000">
+                    </div>
+                    <div class="filter-group">
+                        <label for="areaMax">Max Area (km²):</label>
+                        <input type="number" id="areaMax" placeholder="e.g., 1000000">
+                    </div>
+                    <div class="filter-group">
+                        <label for="languageFilter">Language:</label>
+                        <input type="text" id="languageFilter" placeholder="e.g., English">
+                    </div>
+                    <div class="filter-group">
+                        <label for="landlockFilter">Landlocked:</label>
+                        <select id="landlockFilter">
+                            <option value="all">All</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="unMemberFilter">UN Member:</label>
+                        <select id="unMemberFilter">
+                            <option value="all">All</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="independentFilter">Independent:</label>
+                        <select id="independentFilter">
+                            <option value="all">All</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="advanced-filters-actions">
+                    <button id="applyAdvancedFilters" class="btn btn-primary">Apply Filters</button>
+                    <button id="clearAdvancedFilters" class="btn btn-secondary">Clear Filters</button>
+                </div>
             </div>
         </div>
     </section>
@@ -66,7 +136,7 @@
     <!-- Loading Indicator -->
     <div id="loadingIndicator" class="loading hidden">
         <div class="spinner"></div>
-        <p>Loading countries data...</p>
+        <p>Loading comprehensive country data...</p>
     </div>
 
     <!-- Error Message -->
@@ -75,9 +145,15 @@
         <button id="retryBtn" class="btn btn-primary">Retry</button>
     </div>
 
-    <!-- Results Count -->
+    <!-- Results Count & View Mode -->
     <div class="container">
-        <p id="resultsCount" class="results-count"></p>
+        <div class="results-header">
+            <p id="resultsCount" class="results-count"></p>
+            <div class="view-mode">
+                <button id="gridView" class="btn btn-icon active" title="Grid View">📱</button>
+                <button id="listView" class="btn btn-icon" title="List View">📋</button>
+            </div>
+        </div>
     </div>
 
     <!-- Countries Grid -->
@@ -97,11 +173,58 @@
         </div>
     </div>
 
+    <!-- Compare Modal -->
+    <div id="compareModal" class="modal hidden">
+        <div class="modal-content compare-modal-content">
+            <button class="modal-close" id="compareModalClose">&times;</button>
+            <h2>🔄 Compare Countries</h2>
+            <div id="compareContent">
+                <p class="compare-instructions">Select 2-4 countries from the main list by clicking the compare checkbox on each card.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Favorites Modal -->
+    <div id="favoritesModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close" id="favoritesModalClose">&times;</button>
+            <h2>⭐ Your Favorite Countries</h2>
+            <div id="favoritesContent">
+                <p class="favorites-empty">No favorites yet. Click the star icon on any country card to add it to your favorites!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div id="statsModal" class="modal hidden">
+        <div class="modal-content stats-modal-content">
+            <button class="modal-close" id="statsModalClose">&times;</button>
+            <h2>📊 Global Statistics & Rankings</h2>
+            <div id="statsContent">
+                <!-- Statistics will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quizModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close" id="quizModalClose">&times;</button>
+            <div id="quizContent">
+                <h2>🎯 Country Knowledge Quiz</h2>
+                <div id="quizGame">
+                    <!-- Quiz will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <p>Data provided by <a href="https://restcountries.com" target="_blank">REST Countries API</a></p>
             <p>Created for educational purposes | &copy; 2025</p>
+            <p>Features: Compare • Favorites • Statistics • Quiz • Dark Mode</p>
         </div>
     </footer>
 

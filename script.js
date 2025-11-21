@@ -71,7 +71,7 @@ function initializeApp() {
     // Apply dark mode if enabled
     if (isDarkMode) {
         document.body.classList.add('dark-mode');
-        darkModeToggle.textContent = '☀️';
+        darkModeToggle.textContent = 'Light Mode';
     }
     
     // Update favorites count
@@ -159,6 +159,18 @@ function setupEventListeners() {
         listView.classList.add('active');
         gridView.classList.remove('active');
     });
+
+    // Delegated click handler fallback: capture compare button clicks anywhere
+    document.addEventListener('click', (e) => {
+        const compareBtnEl = e.target.closest('.compare-btn');
+        if (compareBtnEl) {
+            const cca3 = compareBtnEl.dataset.cca3;
+            if (cca3) {
+                // Prevent duplicate handling if the button's own handler already stopped propagation
+                try { handleCompareClick(cca3, e); } catch (err) { console.error('Error handling compare click:', err); }
+            }
+        }
+    });
 }
 
 // ========================================
@@ -177,6 +189,7 @@ async function fetchAllCountries() {
         }
         
         const data = await response.json();
+        
         allCountries = data;
         filteredCountries = data;
         
@@ -186,7 +199,7 @@ async function fetchAllCountries() {
         
     } catch (error) {
         hideLoading();
-        showError('Failed to load countries data. Please check your internet connection and try again.');
+        showError('Type in the search bar to find country information');
         console.error('Error fetching countries:', error);
     }
 }
@@ -211,11 +224,14 @@ async function searchCountry(countryName) {
         
     } catch (error) {
         hideLoading();
+        
         if (error.message === 'Country not found') {
-            showError(`No country found with the name "${countryName}". Please try a different search.`);
+            // Show helpful message for not found
+            showSearchNotFound(countryName);
         } else {
-            showError('Failed to search for country. Please try again.');
+            showError('Type in the search bar to find country information');
         }
+        
         console.error('Error searching country:', error);
         return [];
     }
@@ -237,8 +253,37 @@ function displayCountries(countries) {
         const countryCard = createCountryCard(country);
         countriesGrid.appendChild(countryCard);
     });
+    
+    // Attach explicit listeners to compare buttons as a reliable fallback
+    attachCompareListeners();
 }
 
+// Attach click listeners to compare buttons (fallback to ensure clicks are captured)
+function attachCompareListeners() {
+    try {
+        const buttons = countriesGrid.querySelectorAll('.compare-btn');
+        buttons.forEach(btn => {
+            // Remove existing to avoid duplicate handlers
+            btn.removeEventListener('click', compareBtnHandlerProxy);
+            btn.addEventListener('click', compareBtnHandlerProxy);
+        });
+        console.log('attachCompareListeners: attached to', buttons.length, 'buttons');
+    } catch (err) {
+        console.error('attachCompareListeners error:', err);
+    }
+}
+
+function compareBtnHandlerProxy(e) {
+    // Prevent card click behavior
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const cca3 = btn.dataset.cca3;
+    if (!cca3) {
+        console.warn('compareBtnHandlerProxy: no cca3 on button');
+        return;
+    }
+    handleCompareClick(cca3, e);
+}
 function createCountryCard(country) {
     const card = document.createElement('div');
     card.className = 'country-card';
@@ -262,34 +307,47 @@ function createCountryCard(country) {
     card.innerHTML = `
         <div class="country-card-actions">
             <button class="action-btn favorite-btn ${isFavorite ? 'active' : ''}" 
-                    onclick="toggleFavorite('${cca3}', event)" 
+                    data-cca3="${cca3}"
+                    data-action="favorite"
                     title="Add to Favorites">
-                ${isFavorite ? '⭐' : '☆'}
+                ${isFavorite ? '★' : '☆'}
             </button>
             <button class="action-btn compare-btn ${isInCompare ? 'active' : ''}" 
-                    onclick="toggleCompare('${cca3}', event)" 
+                    data-cca3="${cca3}"
+                    data-action="compare"
                     title="Add to Compare">
-                ${isInCompare ? '✓' : '⚖'}
+                ${isInCompare ? 'Added' : 'Compare'}
             </button>
         </div>
         <img src="${flag}" alt="Flag of ${name}" class="country-flag" 
              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23ddd%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22>No Flag</text></svg>'">
         <div class="country-info">
             <h2 class="country-name">${name}</h2>
-            <p class="country-detail"><strong>📍 Capital:</strong> ${capital}</p>
-            <p class="country-detail"><strong>🌍 Region:</strong> ${region}</p>
-            <p class="country-detail"><strong>🗺️ Subregion:</strong> ${subregion}</p>
-            <p class="country-detail"><strong>👥 Population:</strong> ${population}</p>
-            <p class="country-detail"><strong>📏 Area:</strong> ${area}</p>
+            <p class="country-detail"><strong>Capital:</strong> ${capital}</p>
+            <p class="country-detail"><strong>Region:</strong> ${region}</p>
+            <p class="country-detail"><strong>Subregion:</strong> ${subregion}</p>
+            <p class="country-detail"><strong>Population:</strong> ${population}</p>
+            <p class="country-detail"><strong>Area:</strong> ${area}</p>
             <div class="country-badges">
-                <span class="country-badge">🗣️ ${languages}</span>
+                <span class="country-badge">${languages}</span>
             </div>
         </div>
     `;
     
     // Click on card (not on buttons) to show details
     card.addEventListener('click', (e) => {
-        if (!e.target.closest('.action-btn')) {
+        const btn = e.target.closest('.action-btn');
+        
+        if (btn) {
+            const cca3 = btn.dataset.cca3;
+            const action = btn.dataset.action;
+            
+            if (action === 'favorite') {
+                toggleFavorite(cca3, e);
+            } else if (action === 'compare') {
+                handleCompareClick(cca3, e);
+            }
+        } else if (!e.target.closest('.action-btn')) {
             showCountryDetails(country);
         }
     });
@@ -331,7 +389,7 @@ function showCountryDetails(country) {
         '<span>N/A</span>';
     
     // Geographic info
-    const landlocked = country.landlocked ? '🔒 Yes (Landlocked)' : '🌊 No (Has coastline)';
+    const landlocked = country.landlocked ? 'Yes (Landlocked)' : 'No (Has coastline)';
     const latlng = country.latlng ? `${country.latlng[0].toFixed(4)}°, ${country.latlng[1].toFixed(4)}°` : 'N/A';
     
     // Borders
@@ -341,7 +399,7 @@ function showCountryDetails(country) {
     
     // Driving side
     const drivingSide = country.car?.side ? 
-        `${country.car.side === 'right' ? '🚗 Right side' : '🚙 Left side'}` : 'N/A';
+        `${country.car.side === 'right' ? 'Right side' : 'Left side'}` : 'N/A';
     
     // Internet & Phone
     const tld = country.tld ? country.tld.join(', ') : 'N/A';
@@ -349,10 +407,10 @@ function showCountryDetails(country) {
         `${country.idd.root}${country.idd.suffixes ? country.idd.suffixes[0] : ''}` : 'N/A';
     
     // UN Membership
-    const unMember = country.unMember ? '✅ Yes' : '❌ No';
+    const unMember = country.unMember ? 'Yes' : 'No';
     
     // Independent status
-    const independent = country.independent ? '✅ Independent Nation' : '⚠️ Dependent Territory';
+    const independent = country.independent ? 'Independent Nation' : 'Dependent Territory';
     
     // Start of week
     const startOfWeek = country.startOfWeek ? 
@@ -381,16 +439,16 @@ function showCountryDetails(country) {
             <p class="detail-subtitle">${independent}</p>
             <div class="detail-actions">
                 <button class="btn btn-primary" onclick="toggleFavorite('${cca3}', event)">
-                    ${isFavorite ? '⭐ Remove from Favorites' : '☆ Add to Favorites'}
+                    ${isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
                 </button>
                 <button class="btn btn-secondary" onclick="shareCountry('${name}', '${googleMaps}')">
-                    🔗 Share
+                    Share
                 </button>
                 <button class="btn btn-secondary" onclick="printCountryInfo()">
-                    🖨️ Print
+                    Print
                 </button>
                 <button class="btn btn-secondary" onclick="generateFunFact('${cca3}')">
-                    🎲 Fun Fact
+                    Fun Fact
                 </button>
             </div>
         </div>
@@ -400,7 +458,6 @@ function showCountryDetails(country) {
             <!-- BASIC INFORMATION -->
             <div class="detail-section">
                 <h3 class="section-title">
-                    <span class="section-icon">🏛️</span>
                     Basic Information
                 </h3>
                 <div class="detail-grid">
@@ -434,7 +491,6 @@ function showCountryDetails(country) {
             <!-- GEOGRAPHY & LOCATION -->
             <div class="detail-section">
                 <h3 class="section-title">
-                    <span class="section-icon">🗺️</span>
                     Geography & Location
                 </h3>
                 <div class="detail-grid">
@@ -464,15 +520,14 @@ function showCountryDetails(country) {
                     </div>
                 </div>
                 <div class="map-links">
-                    ${googleMaps !== '#' ? `<a href="${googleMaps}" target="_blank" class="map-link">📍 View on Google Maps</a>` : ''}
-                    ${openStreetMaps !== '#' ? `<a href="${openStreetMaps}" target="_blank" class="map-link">🗺️ View on OpenStreetMap</a>` : ''}
+                    ${googleMaps !== '#' ? `<a href="${googleMaps}" target="_blank" class="map-link">View on Google Maps</a>` : ''}
+                    ${openStreetMaps !== '#' ? `<a href="${openStreetMaps}" target="_blank" class="map-link">View on OpenStreetMap</a>` : ''}
                 </div>
             </div>
 
             <!-- DEMOGRAPHICS -->
             <div class="detail-section">
                 <h3 class="section-title">
-                    <span class="section-icon">👥</span>
                     Demographics & Population
                 </h3>
                 <div class="detail-grid">
@@ -490,7 +545,6 @@ function showCountryDetails(country) {
             <!-- LANGUAGES & COMMUNICATION -->
             <div class="detail-section">
                 <h3 class="section-title">
-                    <span class="section-icon">🗣️</span>
                     Languages & Communication
                 </h3>
                 <div class="detail-item">
@@ -502,7 +556,6 @@ function showCountryDetails(country) {
             <!-- ECONOMY & CURRENCY -->
             <div class="detail-section">
                 <h3 class="section-title">
-                    <span class="section-icon">💰</span>
                     Economy & Currency
                 </h3>
                 <div class="detail-item">
@@ -520,7 +573,6 @@ function showCountryDetails(country) {
             <!-- CONNECTIVITY & INFRASTRUCTURE -->
             <div class="detail-section">
                 <h3 class="section-title">
-                    <span class="section-icon">📞</span>
                     Connectivity & Infrastructure
                 </h3>
                 <div class="detail-grid">
@@ -538,7 +590,6 @@ function showCountryDetails(country) {
             <!-- TIME & TIMEZONE -->
             <div class="detail-section">
                 <h3 class="section-title">
-                    <span class="section-icon">🕐</span>
                     Time & Timezone
                 </h3>
                 <div class="detail-item">
@@ -550,7 +601,6 @@ function showCountryDetails(country) {
             <!-- BORDERS & NEIGHBORS -->
             <div class="detail-section">
                 <h3 class="section-title">
-                    <span class="section-icon">🌐</span>
                     Borders & Neighboring Countries
                 </h3>
                 <div class="detail-item">
@@ -567,6 +617,151 @@ function showCountryDetails(country) {
 
 function closeModal() {
     countryModal.classList.add('hidden');
+}
+// ========================================
+// SMART ERROR MESSAGES
+// ========================================
+
+function showSearchNotFound(searchTerm) {
+    const lowerSearch = searchTerm.toLowerCase().trim();
+    
+    // Common cities that people might search for
+    const commonCities = {
+        'tokyo': 'Japan',
+        'paris': 'France',
+        'london': 'United Kingdom',
+        'new york': 'United States',
+        'rome': 'Italy',
+        'berlin': 'Germany',
+        'madrid': 'Spain',
+        'beijing': 'China',
+        'moscow': 'Russia',
+        'dubai': 'United Arab Emirates',
+        'singapore': 'Singapore',
+        'sydney': 'Australia',
+        'toronto': 'Canada',
+        'mumbai': 'India',
+        'cairo': 'Egypt',
+        'istanbul': 'Turkey',
+        'bangkok': 'Thailand',
+        'seoul': 'South Korea',
+        'mexico city': 'Mexico',
+        'los angeles': 'United States',
+        'chicago': 'United States',
+        'houston': 'United States',
+        'barcelona': 'Spain',
+        'amsterdam': 'Netherlands',
+        'brussels': 'Belgium',
+        'vienna': 'Austria',
+        'prague': 'Czech Republic',
+        'warsaw': 'Poland',
+        'budapest': 'Hungary',
+        'athens': 'Greece',
+        'lisbon': 'Portugal',
+        'dublin': 'Ireland',
+        'stockholm': 'Sweden',
+        'oslo': 'Norway',
+        'helsinki': 'Finland',
+        'copenhagen': 'Denmark',
+        'zurich': 'Switzerland',
+        'milan': 'Italy',
+        'venice': 'Italy',
+        'florence': 'Italy',
+        'marseille': 'France',
+        'lyon': 'France',
+        'manchester': 'United Kingdom',
+        'liverpool': 'United Kingdom',
+        'glasgow': 'United Kingdom',
+        'miami': 'United States',
+        'boston': 'United States',
+        'san francisco': 'United States',
+        'seattle': 'United States',
+        'las vegas': 'United States',
+        'vancouver': 'Canada',
+        'montreal': 'Canada',
+        'rio de janeiro': 'Brazil',
+        'sao paulo': 'Brazil',
+        'buenos aires': 'Argentina',
+        'santiago': 'Chile',
+        'lima': 'Peru',
+        'bogota': 'Colombia',
+        'caracas': 'Venezuela',
+        'manila': 'Philippines',
+        'jakarta': 'Indonesia',
+        'kuala lumpur': 'Malaysia',
+        'hanoi': 'Vietnam',
+        'ho chi minh': 'Vietnam',
+        'hong kong': 'China',
+        'shanghai': 'China',
+        'delhi': 'India',
+        'bangalore': 'India',
+        'karachi': 'Pakistan',
+        'lahore': 'Pakistan',
+        'dhaka': 'Bangladesh',
+        'tehran': 'Iran',
+        'baghdad': 'Iraq',
+        'riyadh': 'Saudi Arabia',
+        'jeddah': 'Saudi Arabia',
+        'tel aviv': 'Israel',
+        'jerusalem': 'Israel',
+        'casablanca': 'Morocco',
+        'lagos': 'Nigeria',
+        'nairobi': 'Kenya',
+        'johannesburg': 'South Africa',
+        'cape town': 'South Africa',
+        'accra': 'Ghana',
+        'addis ababa': 'Ethiopia',
+        'kigali': 'Rwanda'
+    };
+    
+    // Check if it's a known city
+    if (commonCities[lowerSearch]) {
+        const countryName = commonCities[lowerSearch];
+        countriesGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; background: var(--background-white); border-radius: 10px; box-shadow: var(--shadow-md);">
+                <h2 style="color: var(--primary-color); margin-bottom: 20px;">🏙️ "${searchTerm}" is a city!</h2>
+                <p style="font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 20px;">
+                    Did you mean to search for <strong style="color: var(--primary-color);">${countryName}</strong>?
+                </p>
+                <button class="btn btn-primary" onclick="searchForCountry('${countryName}')">
+                    Search for ${countryName} 🔍
+                </button>
+                <p style="margin-top: 20px; color: var(--text-light); font-size: 0.95rem;">
+                    This app searches for countries, not cities. Try searching for country names instead.
+                </p>
+            </div>
+        `;
+    } else {
+        // Generic not found message
+        countriesGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; background: var(--background-white); border-radius: 10px; box-shadow: var(--shadow-md);">
+                <h2 style="color: var(--warning-color); margin-bottom: 20px;">🔍 No Results Found</h2>
+                <p style="font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 15px;">
+                    We couldn't find a country matching <strong>"${searchTerm}"</strong>
+                </p>
+                <div style="background-color: var(--background-light); padding: 20px; border-radius: 8px; margin: 20px auto; max-width: 500px;">
+                    <p style="color: var(--text-primary); margin-bottom: 10px;"><strong>💡 Tips:</strong></p>
+                    <ul style="text-align: left; color: var(--text-secondary); line-height: 2;">
+                        <li>Check your spelling</li>
+                        <li>Search for the country name, not a city</li>
+                        <li>Try using the full country name</li>
+                        <li>Use the region filter to browse countries</li>
+                    </ul>
+                </div>
+                <p style="margin-top: 20px; color: var(--text-light); font-size: 0.95rem;">
+                    Examples: Japan, France, Brazil, Canada
+                </p>
+            </div>
+        `;
+    }
+    
+    updateResultsCount(0);
+}
+
+// Helper function to search for suggested country
+window.searchForCountry = function(countryName) {
+    searchInput.value = countryName;
+    handleSearch();
 }
 
 // ========================================
@@ -629,22 +824,33 @@ function closeFavoritesModal() {
 // COMPARE SYSTEM
 // ========================================
 
-function toggleCompare(cca3, event) {
+function handleCompareClick(cca3, event) {
+    console.log('Compare button clicked for:', cca3);
     event.stopPropagation();
+    toggleCompare(cca3, event);
+}
+
+function toggleCompare(cca3, event) {
+    console.log('toggleCompare called with cca3:', cca3);
     
     const country = allCountries.find(c => c.cca3 === cca3);
-    if (!country) return;
+    if (!country) {
+        console.error('Country not found:', cca3);
+        return;
+    }
     
     const index = compareList.findIndex(c => c.cca3 === cca3);
     
     if (index > -1) {
         compareList.splice(index, 1);
+        console.log('Removed from comparison:', cca3);
     } else {
         if (compareList.length >= 4) {
             alert('You can only compare up to 4 countries at once.');
             return;
         }
         compareList.push(country);
+        console.log('Added to comparison:', cca3, 'Total:', compareList.length);
     }
     
     updateCompareCount();
@@ -652,12 +858,17 @@ function toggleCompare(cca3, event) {
 }
 
 function updateCompareCount() {
-    compareCount.textContent = `Compare (${compareList.length})`;
+    const text = `Compare (${compareList.length})`;
+    compareCount.textContent = text;
+    console.log('Updated compare count to:', text, 'Countries:', compareList.map(c => c.name.common));
 }
 
 function openCompareModal() {
+    console.log('Opening compare modal. Countries selected:', compareList.length);
+    console.log('Compare list:', compareList.map(c => c.name.common));
+    
     if (compareList.length < 2) {
-        compareContent.innerHTML = '<p class="compare-instructions">Please select at least 2 countries to compare. Click the compare button (⚖) on country cards.</p>';
+        compareContent.innerHTML = '<p class="compare-instructions">Please select at least 2 countries to compare. Click the compare button on country cards.</p>';
     } else {
         compareContent.innerHTML = createComparisonTable();
     }
@@ -721,7 +932,7 @@ function createComparisonTable() {
                 value = country.idd?.root ? 
                     `${country.idd.root}${country.idd.suffixes ? country.idd.suffixes[0] : ''}` : 'N/A';
             } else if (field.format === 'boolean') {
-                value = value ? '✅ Yes' : '❌ No';
+                value = value ? 'Yes' : 'No';
             } else if (!value) {
                 value = 'N/A';
             }
@@ -833,7 +1044,7 @@ function createStatisticsHTML(stats) {
         <div class="stats-grid">
             <!-- Overall Stats -->
             <div class="stat-card">
-                <h3>🌍 Global Overview</h3>
+                <h3>Global Overview</h3>
                 <div class="stat-item">
                     <span>Total Countries:</span>
                     <strong>${stats.totalCountries}</strong>
@@ -850,7 +1061,7 @@ function createStatisticsHTML(stats) {
             
             <!-- Regional Distribution -->
             <div class="stat-card">
-                <h3>🗺️ Regional Distribution</h3>
+                <h3>Regional Distribution</h3>
                 ${Object.entries(stats.regions).map(([region, data]) => `
                     <div class="stat-item">
                         <span>${region}:</span>
@@ -861,7 +1072,7 @@ function createStatisticsHTML(stats) {
             
             <!-- Top by Population -->
             <div class="stat-card">
-                <h3>👥 Most Populous Countries</h3>
+                <h3>Most Populous Countries</h3>
                 ${stats.topByPopulation.map((c, i) => `
                     <div class="stat-item">
                         <span>${i + 1}. ${c.name.common}</span>
@@ -872,7 +1083,7 @@ function createStatisticsHTML(stats) {
             
             <!-- Top by Area -->
             <div class="stat-card">
-                <h3>📏 Largest Countries by Area</h3>
+                <h3>Largest Countries by Area</h3>
                 ${stats.topByArea.map((c, i) => `
                     <div class="stat-item">
                         <span>${i + 1}. ${c.name.common}</span>
@@ -883,7 +1094,7 @@ function createStatisticsHTML(stats) {
             
             <!-- Top by Density -->
             <div class="stat-card">
-                <h3>🏙️ Most Dense Countries</h3>
+                <h3>Most Dense Countries</h3>
                 ${stats.topByDensity.map((c, i) => `
                     <div class="stat-item">
                         <span>${i + 1}. ${c.name.common}</span>
@@ -894,7 +1105,7 @@ function createStatisticsHTML(stats) {
             
             <!-- Top Languages -->
             <div class="stat-card">
-                <h3>🗣️ Most Spoken Languages</h3>
+                <h3>Most Spoken Languages</h3>
                 ${stats.topLanguages.map(([lang, count], i) => `
                     <div class="stat-item">
                         <span>${i + 1}. ${lang}</span>
@@ -911,6 +1122,10 @@ function createStatisticsHTML(stats) {
 // ========================================
 
 function openQuizModal() {
+    if (!allCountries || allCountries.length === 0) {
+        alert('Countries data is still loading. Please wait a moment and try again.');
+        return;
+    }
     generateQuiz();
     quizModal.classList.remove('hidden');
 }
@@ -923,6 +1138,8 @@ function generateQuiz() {
     currentQuizIndex = 0;
     quizScore = 0;
     
+    console.log('Starting quiz generation. Total countries:', allCountries.length);
+    
     // Generate 10 random questions
     quizQuestions = [];
     const questionTypes = ['capital', 'flag', 'population', 'region'];
@@ -931,29 +1148,50 @@ function generateQuiz() {
         const type = questionTypes[Math.floor(Math.random() * questionTypes.length)];
         const country = allCountries[Math.floor(Math.random() * allCountries.length)];
         
+        if (!country) {
+            console.error('Could not find country for question', i);
+            continue;
+        }
+        
+        const optionsData = generateOptions(country, type);
         quizQuestions.push({
             type,
             country,
-            options: generateOptions(country, type)
+            options: optionsData.options,
+            correctAnswer: optionsData.correctAnswer
         });
     }
     
+    console.log('Quiz questions generated:', quizQuestions.length);
     displayQuizQuestion();
 }
 
 function generateOptions(correctCountry, type) {
+    let correctAnswer = '';
     const options = [];
     const otherCountries = allCountries.filter(c => c.cca3 !== correctCountry.cca3);
     
+    // Safety check: if not enough countries, skip this question
+    if (otherCountries.length < 3) {
+        return {
+            options: ['N/A', 'N/A', 'N/A', 'N/A'],
+            correctAnswer: 'N/A'
+        };
+    }
+    
     // Add correct answer
     if (type === 'capital') {
-        options.push(correctCountry.capital?.[0] || 'Unknown');
+        correctAnswer = correctCountry.capital?.[0] || 'Unknown';
+        options.push(correctAnswer);
     } else if (type === 'flag') {
-        options.push(correctCountry.name.common);
+        correctAnswer = correctCountry.name.common;
+        options.push(correctAnswer);
     } else if (type === 'population') {
-        options.push((correctCountry.population || 0).toLocaleString());
+        correctAnswer = (correctCountry.population || 0).toLocaleString();
+        options.push(correctAnswer);
     } else if (type === 'region') {
-        options.push(correctCountry.region || 'Unknown');
+        correctAnswer = correctCountry.region || 'Unknown';
+        options.push(correctAnswer);
     }
     
     // Add 3 wrong answers
@@ -977,7 +1215,12 @@ function generateOptions(correctCountry, type) {
     }
     
     // Shuffle options
-    return options.sort(() => Math.random() - 0.5);
+    const shuffledOptions = options.sort(() => Math.random() - 0.5);
+    
+    return {
+        options: shuffledOptions,
+        correctAnswer: correctAnswer
+    };
 }
 
 function displayQuizQuestion() {
@@ -999,11 +1242,12 @@ function displayQuizQuestion() {
         questionText = `Which region does ${question.country.name.common} belong to?`;
     }
     
+    const flagUrl = question.country.flags?.svg || question.country.flags?.png || '';
     let html = `
         <div class="quiz-score">Question ${currentQuizIndex + 1} of ${quizQuestions.length} | Score: ${quizScore}/${currentQuizIndex}</div>
         <div class="quiz-question">
             <h3>${questionText}</h3>
-            ${question.type === 'flag' ? `<img src="${question.country.flags.svg}" alt="Flag" style="max-width: 300px; margin: 20px auto; display: block; border-radius: 10px;">` : ''}
+            ${question.type === 'flag' && flagUrl ? `<img src="${flagUrl}" alt="Flag" style="max-width: 300px; margin: 20px auto; display: block; border-radius: 10px; onerror='this.style.display=\\\"none\\\"'">` : ''}
             <div class="quiz-options">
                 ${question.options.map((option, index) => `
                     <button class="quiz-option" onclick="checkAnswer(${index})">${option}</button>
@@ -1017,7 +1261,7 @@ function displayQuizQuestion() {
 
 function checkAnswer(selectedIndex) {
     const question = quizQuestions[currentQuizIndex];
-    const correctAnswer = question.options[0]; // We always put correct answer first in generation
+    const correctAnswer = question.correctAnswer;
     const selectedAnswer = question.options[selectedIndex];
     
     const buttons = document.querySelectorAll('.quiz-option');
@@ -1050,13 +1294,13 @@ function displayQuizResults() {
     let message = '';
     
     if (percentage >= 80) {
-        message = '🎉 Excellent! You really know your countries!';
+        message = 'Excellent! You really know your countries!';
     } else if (percentage >= 60) {
-        message = '👍 Good job! You have solid knowledge!';
+        message = 'Good job! You have solid knowledge!';
     } else if (percentage >= 40) {
-        message = '📚 Not bad! Keep learning!';
+        message = 'Not bad! Keep learning!';
     } else {
-        message = '💪 Keep practicing! You\'ll get better!';
+        message = 'Keep practicing! You\'ll get better!';
     }
     
     document.getElementById('quizGame').innerHTML = `
@@ -1283,14 +1527,14 @@ function generateFunFact(cca3) {
     if (!country) return;
     
     const facts = [
-        `Did you know? ${country.name.common} has a population of ${(country.population || 0).toLocaleString()} people!`,
-        `Fun fact: The total area of ${country.name.common} is ${(country.area || 0).toLocaleString()} km²!`,
-        `Interesting: ${country.name.common} is located in ${country.region}!`,
-        `Cool: People from ${country.name.common} are called ${country.demonyms?.eng?.m || 'locals'}!`,
-        `Amazing: ${country.name.common}'s capital is ${country.capital?.[0] || 'not officially designated'}!`,
-        `Wow: ${country.name.common} speaks ${country.languages ? Object.values(country.languages).length : 0} official language(s)!`,
-        country.landlocked ? `${country.name.common} is a landlocked country!` : `${country.name.common} has access to the ocean!`,
-        country.unMember ? `${country.name.common} is a member of the United Nations!` : `${country.name.common} is not a UN member.`,
+        `${country.name.common} has a population of ${(country.population || 0).toLocaleString()} people.`,
+        `The total area of ${country.name.common} is ${(country.area || 0).toLocaleString()} km².`,
+        `${country.name.common} is located in ${country.region}.`,
+        `People from ${country.name.common} are called ${country.demonyms?.eng?.m || 'locals'}.`,
+        `${country.name.common}'s capital is ${country.capital?.[0] || 'not officially designated'}.`,
+        `${country.name.common} has ${country.languages ? Object.values(country.languages).length : 0} official language(s).`,
+        country.landlocked ? `${country.name.common} is a landlocked country.` : `${country.name.common} has access to the ocean.`,
+        country.unMember ? `${country.name.common} is a member of the United Nations.` : `${country.name.common} is not a UN member.`,
     ];
     
     const randomFact = facts[Math.floor(Math.random() * facts.length)];

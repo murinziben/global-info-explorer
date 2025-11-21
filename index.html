@@ -12,20 +12,20 @@
         <div class="container">
             <div class="header-content">
                 <div class="header-left">
-                    <h1>🌍 Global Info Explorer</h1>
+                    <h1>Global Info Explorer</h1>
                     <p class="subtitle">Ultimate platform for exploring world countries</p>
-                    <p class="data-note">📊 Demographics • Geography • Economy • Culture • Statistics</p>
+                    <p class="data-note">Demographics • Geography • Economy • Culture • Statistics</p>
                 </div>
                 <div class="header-right">
-                    <button id="darkModeToggle" class="btn btn-icon" title="Toggle Dark Mode">🌙</button>
+                    <button id="darkModeToggle" class="btn btn-icon" title="Toggle Dark Mode">Dark/Light</button>
                     <button id="compareBtn" class="btn btn-secondary" title="Compare Countries">
                         <span id="compareCount">Compare (0)</span>
                     </button>
                     <button id="favoritesBtn" class="btn btn-secondary" title="View Favorites">
-                        ⭐ Favorites (<span id="favCount">0</span>)
+                        Favorites (<span id="favCount">0</span>)
                     </button>
-                    <button id="statsBtn" class="btn btn-secondary">📊 Statistics</button>
-                    <button id="quizBtn" class="btn btn-secondary">🎯 Quiz Mode</button>
+                    <button id="statsBtn" class="btn btn-secondary">Statistics</button>
+                    <button id="quizBtn" class="btn btn-secondary">Quiz Mode</button>
                 </div>
             </div>
         </div>
@@ -42,8 +42,8 @@
                     placeholder="Search for a country by name, capital, or language..."
                     aria-label="Search countries"
                 >
-                <button id="searchBtn" class="btn btn-primary">🔍 Search</button>
-                <button id="advancedFiltersToggle" class="btn btn-secondary">⚙️ Advanced Filters</button>
+                <button id="searchBtn" class="btn btn-primary">Search</button>
+                <button id="advancedFiltersToggle" class="btn btn-secondary">Advanced Filters</button>
             </div>
 
             <!-- Basic Filters -->
@@ -73,12 +73,12 @@
                     </select>
                 </div>
 
-                <button id="resetBtn" class="btn btn-secondary">🔄 Reset All</button>
+                <button id="resetBtn" class="btn btn-secondary">Reset All</button>
             </div>
 
             <!-- Advanced Filters Panel (Hidden by default) -->
             <div id="advancedFilters" class="advanced-filters hidden">
-                <h3>🔧 Advanced Filters</h3>
+                <h3>Advanced Filters</h3>
                 <div class="advanced-filters-grid">
                     <div class="filter-group">
                         <label for="populationMin">Min Population:</label>
@@ -139,19 +139,21 @@
         <p>Loading comprehensive country data...</p>
     </div>
 
-    <!-- Error Message -->
-    <div id="errorMessage" class="error-message hidden">
-        <p id="errorText"></p>
-        <button id="retryBtn" class="btn btn-primary">Retry</button>
-    </div>
+  <!-- Search Instruction Message -->
+<div id="errorMessage" class="error-message hidden">
+    <p id="errorText" style="color: var(--text-primary); font-size: 1.2rem; margin-bottom: 20px;">
+        Type in the search bar to find country information
+    </p>
+    <button id="retryBtn" class="btn btn-primary">Start Searching</button>
+</div>
 
     <!-- Results Count & View Mode -->
     <div class="container">
         <div class="results-header">
             <p id="resultsCount" class="results-count"></p>
             <div class="view-mode">
-                <button id="gridView" class="btn btn-icon active" title="Grid View">📱</button>
-                <button id="listView" class="btn btn-icon" title="List View">📋</button>
+                <button id="gridView" class="btn btn-icon active" title="Grid View">Grid</button>
+                <button id="listView" class="btn btn-icon" title="List View">List</button>
             </div>
         </div>
     </div>
@@ -177,7 +179,7 @@
     <div id="compareModal" class="modal hidden">
         <div class="modal-content compare-modal-content">
             <button class="modal-close" id="compareModalClose">&times;</button>
-            <h2>🔄 Compare Countries</h2>
+            <h2>Compare Countries</h2>
             <div id="compareContent">
                 <p class="compare-instructions">Select 2-4 countries from the main list by clicking the compare checkbox on each card.</p>
             </div>
@@ -188,7 +190,7 @@
     <div id="favoritesModal" class="modal hidden">
         <div class="modal-content">
             <button class="modal-close" id="favoritesModalClose">&times;</button>
-            <h2>⭐ Your Favorite Countries</h2>
+            <h2>Your Favorite Countries</h2>
             <div id="favoritesContent">
                 <p class="favorites-empty">No favorites yet. Click the star icon on any country card to add it to your favorites!</p>
             </div>
@@ -199,7 +201,7 @@
     <div id="statsModal" class="modal hidden">
         <div class="modal-content stats-modal-content">
             <button class="modal-close" id="statsModalClose">&times;</button>
-            <h2>📊 Global Statistics & Rankings</h2>
+            <h2>Global Statistics & Rankings</h2>
             <div id="statsContent">
                 <!-- Statistics will be inserted here -->
             </div>
@@ -211,7 +213,7 @@
         <div class="modal-content">
             <button class="modal-close" id="quizModalClose">&times;</button>
             <div id="quizContent">
-                <h2>🎯 Country Knowledge Quiz</h2>
+                <h2>Country Knowledge Quiz</h2>
                 <div id="quizGame">
                     <!-- Quiz will be inserted here -->
                 </div>

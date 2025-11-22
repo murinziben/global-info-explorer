@@ -1,6 +1,6 @@
 #  Global Info Explorer
 
-A comprehensive web application for exploring detailed information about every country in the world. Built with vanilla JavaScript and powered by the REST Countries API.
+A comprehensive web application for exploring detailed information about every country in the world. Built with html, css, and JavaScript and powered by the REST Countries API.
 
 **link to website (subdomain name )**(https://globalinfoexplorer.murinziben.tech/)
 [![API]](https://restcountries.com)

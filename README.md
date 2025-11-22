@@ -14,7 +14,6 @@ A comprehensive web application for exploring detailed information about every c
 
 - [Overview](#overview)
 - [Features](#features)
-- [Screenshots](#screenshots)
 - [Technologies Used](#technologies-used)
 - [Project Purpose](#project-purpose)
 - [Installation & Local Setup](#installation--local-setup)

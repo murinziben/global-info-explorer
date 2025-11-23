@@ -1,6 +1,6 @@
 #  Global Info Explorer
 
-A comprehensive web application for exploring detailed information about every country in the world. Built with html, css, and JavaScript and powered by the REST Countries API.
+Global Info Explorer provides instant access to comprehensive information about 250+ countries worldwide. It serves students researching for assignments, travelers planning trips, and business professionals analyzing international markets. Features include advanced search and filtering, country comparison, interactive quiz mode, global statistics, and favorites management. The application utilizes REST Countries API and is professionally deployed with load-balanced Nginx servers ensuring fast, reliable access for users globally.
 
 **link to website (subdomain name )**(https://globalinfoexplorer.murinziben.tech/)
 [![API]](https://restcountries.com)
@@ -8,12 +8,15 @@ A comprehensive web application for exploring detailed information about every c
 
 **Live Application:** [https://globalinfoexplorer.murinziben.tech/](https://globalinfoexplorer.murinziben.tech/)
 
+**YouTube demo video for how this web application works:** https://youtu.be/YwNAAdT1Vus
+
 ---
 
 ##  Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Technologies Used](#technologies-used)
 - [Project Purpose](#project-purpose)
 - [Installation & Local Setup](#installation--local-setup)

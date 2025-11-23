@@ -348,8 +348,16 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-### Verification
+### genarating the certificate
 
+### Verification
+```bash
+sudo apt update
+sudo apt install certbot 
+sudo apt install python3-certbot-nginx
+sudo certbot --nginx -d globalinfoexplorer.murinziben.tech
+
+```
 Test the deployment:
 ```bash
 

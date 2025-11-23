@@ -185,8 +185,6 @@ global-info-explorer/
 ├── script.js           # Application logic and API integration
 ├── README.md           # This file
 ├── .gitignore          # Git ignore rules
-└── assets/             # Images and screenshots
-    └── screenshots/
 ```
 
 ---
